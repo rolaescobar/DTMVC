@@ -1,0 +1,47 @@
+﻿@model DTMVC.Models.WeatherModel
+
+@{
+    ViewData["Title"] = "Consulta del Clima";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Consulta el Clima</h1>
+    <p class="lead">Ingresa el nombre de una ciudad y selecciona el país para obtener el clima actual.</p>
+    <hr class="my-4">
+</div>
+
+<div class="container mt-5">
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    <form asp-action="GetWeather" method="post">
+        <div class="form-group">
+            <label for="Pais">País</label>
+            <select asp-for="Pais" class="form-control">
+                <option>Guatemala</option>
+                <option>México</option>
+                <option>Estados Unidos</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="Ciudad">Ciudad</label>
+            <input asp-for="Ciudad" class="form-control" placeholder="Ingresa el nombre de una ciudad" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Obtener Clima</button>
+    </form>
+
+    @if (Model != null && Model.Temperatura != 0)
+    {
+        <div class="mt-4">
+            <h3>Clima en @Model.Ciudad, @Model.Pais</h3>
+            <p><strong>Temperatura:</strong> @Model.Temperatura °C</p>
+            <p><strong>Descripción:</strong> @Model.Descripcion</p>
+            <p><strong>Humedad:</strong> @Model.Humedad %</p>
+            <p><strong>Viento:</strong> @Model.Viento m/s</p>
+        </div>
+    }
+</div>

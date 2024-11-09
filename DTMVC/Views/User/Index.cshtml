@@ -1,0 +1,155 @@
+﻿
+@model IEnumerable<DTMVC.Models.User>
+@{
+}
+<h2>Lista de Usuarios</h2>
+
+<!-- Botones de acción -->
+<div class="mb-3">
+    <button id="addButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">Agregar</button>
+    <button id="deleteButton" class="btn btn-danger">Eliminar</button>
+
+</div>
+
+<div class="input-group">
+   
+
+<!-- Contenedor para AG Grid ajustado a la altura del contenido -->
+<div id="myGrid" class="ag-theme-quartz-dark" style="width: 100%; background-color: white; color: black;"></div>
+
+<!-- Modal de Bootstrap para agregar usuario -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Agregar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rol</label>
+                            <select id="role" class="form-select" id="inputGroupSelect04">
+                                <option selected>SELECCIÓN</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="DELEGADO">DELEGADO</option>
+                                <option value="SUPERVISOR">SUPERVISOR</option>
+                            </select>
+                 
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveUserButton">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+    // Definición de las columnas de la tabla
+    const columnDefs = [
+        { headerName: "ID", field: "Id", width: 70 },
+        { headerName: "Nombre", field: "FirstName", width: 150, editable: true },
+        { headerName: "Apellido", field: "LastName", width: 150, editable: true },
+        { headerName: "Correo Electrónico", field: "Email", width: 200, editable: true },
+        { headerName: "Rol", field: "Role", width: 100, editable: true }
+    ];
+
+    // Serialización del modelo a JSON usando Newtonsoft.Json
+    const rowData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+    console.log("Datos de usuarios:", rowData); // Verificar los datos en la consola
+
+    // Configuración de AG Grid
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: rowData,
+        pagination: true,  // Activar paginación
+        paginationPageSize: 10,  // Configuración de 10 filas por página
+        defaultColDef: {
+            sortable: true,
+            filter: true,
+            resizable: true
+        },
+        rowSelection: 'single',  // Permitir la selección de una fila para eliminar
+        onGridReady: function () {
+            // Ajusta la altura de la tabla al contenido
+            const gridHeight = Math.min(500, gridOptions.api.getDisplayedRowCount() * 45 + 80); // Ajuste dinámico
+            document.getElementById('myGrid').style.height = gridHeight + 'px';
+            gridOptions.api.sizeColumnsToFit();
+        }
+    };
+
+    // Inicialización de la tabla
+    document.addEventListener('DOMContentLoaded', function () {
+        const eGridDiv = document.querySelector('#myGrid');
+        if (eGridDiv) {
+            new agGrid.Grid(eGridDiv, gridOptions);
+            console.log("AG Grid inicializado correctamente.");
+        } else {
+            console.error("No se encontró el contenedor #myGrid");
+        }
+
+        // Botón de guardar usuario en el modal
+        document.getElementById('saveUserButton').addEventListener('click', function () {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
+
+       
+
+            if (firstName && lastName && email && role) {
+                const newId = gridOptions.api.getDisplayedRowCount() + 1; // Genera un nuevo ID
+                console.log('nueva cantidad o nuevo id:' + newId)
+
+                const newRow = { Id: newId, FirstName: firstName, LastName: lastName, Email: email, Role: role };
+
+                // Añade la nueva fila a la tabla
+                gridOptions.api.applyTransaction({ add: [newRow] });
+
+                // Cierra el modal
+                const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+                addUserModal.hide();
+
+                // Limpia los campos del formulario
+                document.getElementById('addUserForm').reset();
+
+                // Ajusta la altura de la tabla
+                const gridHeight = Math.min(500, gridOptions.api.getDisplayedRowCount() * 45 + 80);
+                document.getElementById('myGrid').style.height = gridHeight + 'px';
+            } else {
+                alert("Por favor, completa todos los campos.");
+            }
+        });
+
+        // Botón de eliminar
+        document.getElementById('deleteButton').addEventListener('click', function () {
+            const selectedRow = gridOptions.api.getSelectedRows();
+            if (selectedRow.length === 0) {
+                alert("Por favor, selecciona una fila para eliminar.");
+                return;
+            }
+            gridOptions.api.applyTransaction({ remove: selectedRow });
+
+            // Ajusta la altura de la tabla
+            const gridHeight = Math.min(500, gridOptions.api.getDisplayedRowCount() * 45 + 80);
+            document.getElementById('myGrid').style.height = gridHeight + 'px';
+        });
+    });
+</script>
